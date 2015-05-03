@@ -10,10 +10,13 @@ require('songbird')
 // let bluebird = require('bluebird')
 let rimraf = require('rimraf')
 let mkdirp = require('mkdirp')
+let argv = require('yargs')
+.argv
 // bluebird.longStackTraces()
 require('longjohn')
 
 const TCP_PORT = '8001'
+const ROOT_DIR = argv.dirname ? path.resolve(argv.dirname) : path.resolve(process.cwd())
 
 function connectToServer1(){
 	console.log('connecting to tcp server 1 now')

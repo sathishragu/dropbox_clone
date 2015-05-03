@@ -9,12 +9,14 @@ require('songbird')
 // let bluebird = require('bluebird')
 let rimraf = require('rimraf')
 let mkdirp = require('mkdirp')
+let argv = require('yargs')
+.argv
 // bluebird.longStackTraces()
 require('longjohn')
 
 const NODE_ENV = process.env.NODE_ENV
 const PORT = process.env.PORT || 8000
-const ROOT_DIR = path.resolve(process.cwd())
+const ROOT_DIR = argv.dirname ? path.resolve(argv.dirname) : path.resolve(process.cwd())
 const TCP_PORT = '8001'
 
 let app = express()
@@ -23,6 +25,7 @@ if (NODE_ENV === 'development') {
 	app.use(morgan('dev'))
 }
 app.listen(PORT, ()=> console.log(`LISTENING @ http://127.0.0.1:${PORT}`))
+console.log('Root dir is :'+ROOT_DIR)
 app.get('*', setFileMeta, setDirDetails, sendHeaders, (req, res) => {
 		if(res.body) {
 			res.json(res.body)
@@ -54,7 +57,8 @@ app.put('*', setFileMeta, setDirDetails, (req, res, next) => {
 		let type = req.isDir ? 'Directory' : 'File'
 		if(req.stat) return res.send(405, 'File exists')
 		await mkdirp.promise(req.dirPath)
-		if(!req.isDir)req.pipe(fs.createWriteStream(req.filePath))
+		if(!req.isDir)
+			await req.pipe(fs.createWriteStream(req.filePath))
 		res.end()
 		if(!req.isDir){
 			await fs.promise.readFile(req.filePath, 'utf8')
@@ -76,7 +80,7 @@ app.post('*', setFileMeta, setDirDetails, (req, res, next) => {
 		if(!req.stat) return res.send(405, 'File does not exist')
 		if(req.isDir) return res.send(405, 'Path is a directory')
 		await fs.promise.truncate(req.filePath, 0)
-		req.pipe(fs.createWriteStream(req.filePath))
+		await req.pipe(fs.createWriteStream(req.filePath))
 		res.end()
 		await fs.promise.readFile(req.filePath, 'utf8')
   		.then(data => {
