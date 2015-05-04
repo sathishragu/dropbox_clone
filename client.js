@@ -86,6 +86,8 @@ async function putOperation(data){
     await mkdirp.promise(filePath)
     console.log('Directory created successfully at '+filePath)
   } else {
+  	console.log(path.dirname(filePath))
+  	await mkdirp.promise(path.dirname(filePath))
      await fs.promise.writeFile(filePath, data.contents, 'utf-8')
     console.log('File created successfully!!')
   }
